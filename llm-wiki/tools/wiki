@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Thin wrapper around wiki_tool.py.
+#
+# Resolves the vault in this order:
+#   1. $WIKI_ARG  (e.g. WIKI_ARG=/path/to/wiki ./wiki lint)
+#   2. $WIKI_PATH
+#   3. ../wiki relative to this script
+#
+# Usage:  wiki lint | orient | pending | verify | capture … | propose … | apply … | reindex | hash FILE
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(dirname "$HERE")"
+WIKI="${WIKI_ARG:-${WIKI_PATH:-$ROOT/wiki}}"
+
+if [[ ! -f "$WIKI/SCHEMA.md" ]]; then
+  echo "error: no vault at '$WIKI' (no SCHEMA.md there)." >&2
+  echo "       set WIKI_PATH, or pass WIKI_ARG=/abs/path/to/wiki" >&2
+  exit 2
+fi
+
+exec "${PYTHON:-python3}" "$HERE/wiki_tool.py" --wiki "$WIKI" "$@"
